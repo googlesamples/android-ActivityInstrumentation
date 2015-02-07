@@ -36,6 +36,13 @@ android {
     defaultConfig {
         minSdkVersion 4
         targetSdkVersion 21
+
+        applicationId "com.example.android.activityinstrumentation"
+
+        testApplicationId "com.example.android.activityinstrumentation.tests"
+        testInstrumentationRunner "android.test.InstrumentationTestRunner"
+        testHandleProfiling true
+        testFunctionalTest true
     }
 
     sourceSets {
