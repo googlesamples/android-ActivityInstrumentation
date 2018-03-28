@@ -17,24 +17,22 @@
 package com.example.android.activityinstrumentation;
 
 import android.app.Activity;
+import android.support.test.espresso.idling.CountingIdlingResource;
 import android.test.ActivityInstrumentationTestCase2;
 import android.widget.Spinner;
-
-import com.example.android.activityinstrumentation.MainActivity;
-import com.example.android.activityinstrumentation.R;
 
 /**
  * This is a simple framework for a test of an Application.  See
  * {@link android.test.ApplicationTestCase ApplicationTestCase} for more information on
  * how to write and extend Application tests.
- *
+ * <p>
  * <p>To run this test, you can type:
  * adb shell am instrument -w \
  * -e class com.example.android.activityinstrumentation.MainActivityTest \
  * quux.tests/android.test.InstrumentationTestRunner
- *
+ * <p>
  * <p>Individual tests are defined as any method beginning with 'test'.
- *
+ * <p>
  * <p>ActivityInstrumentationTestCase2 allows these tests to run alongside a running
  * copy of the application under inspection. Calling getActivity() will return a
  * handle to this activity (launching it if needed).
@@ -47,7 +45,7 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
 
     /**
      * Test to make sure that spinner values are persisted across activity restarts.
-     *
+     * <p>
      * <p>Launches the main activity, sets a spinner value, closes the activity, then relaunches
      * that activity. Checks to make sure that the spinner values match what we set them to.
      */
@@ -56,6 +54,8 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
         // END_INCLUDE (test_name)
         final int TEST_SPINNER_POSITION_1 = MainActivity.WEATHER_PARTLY_CLOUDY;
 
+        final CountingIdlingResource countingIdlingResource = new CountingIdlingResource("DATA_LOAD");
+
         // BEGIN_INCLUDE (launch_activity)
         // Launch the activity
         Activity activity = getActivity();
@@ -63,7 +63,9 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
 
         // BEGIN_INCLUDE (write_to_ui)
         // Set spinner to test position 1
-        final Spinner spinner1 = (Spinner) activity.findViewById(R.id.spinner);
+        final Spinner spinner1 = activity.findViewById(R.id.spinner);
+
+        countingIdlingResource.increment();
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -74,6 +76,7 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
                 // cannot be called if this annotation is used.
                 spinner1.requestFocus();
                 spinner1.setSelection(TEST_SPINNER_POSITION_1);
+                countingIdlingResource.decrement();
             }
         });
         // END_INCLUDE (write_to_ui)
@@ -98,12 +101,14 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
         // echoing a previously-stored value that (coincidently) matches position 1
         final int TEST_SPINNER_POSITION_2 = MainActivity.WEATHER_SNOW;
 
+        countingIdlingResource.increment();
         // Set spinner to test position 2
         activity.runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 spinner2.requestFocus();
                 spinner2.setSelection(TEST_SPINNER_POSITION_2);
+                countingIdlingResource.decrement();
             }
         });
 
@@ -115,7 +120,7 @@ public class SampleTests extends ActivityInstrumentationTestCase2<MainActivity> 
         activity = this.getActivity();
 
         // Verify that the spinner was saved at position 2
-        final Spinner spinner3 = (Spinner) activity.findViewById(R.id.spinner);
+        final Spinner spinner3 = activity.findViewById(R.id.spinner);
         currentPosition = spinner3.getSelectedItemPosition();
         assertEquals(TEST_SPINNER_POSITION_2, currentPosition);
     }
